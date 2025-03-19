@@ -100,8 +100,20 @@ def shap_feat_imp_globale():
 
 @app.route('/shap_feat_imp_locale', methods=['POST'])
 def shap_feat_imp_locale():
+    data = request.get_json()
+    id_client = data.get('id_client')
+
+    if id_client is None:
+        return jsonify({"error": "ID client manquant"}), 400
+
+    input_df = df_read[df_read['SK_ID_CURR'] == id_client]
+    ligne_numero = input_df.index.tolist()[0]
+
+    if input_df.empty:
+        return jsonify({"error": "Client inconnu"}), 404
+
     plt.figure()
-    shap.plots.waterfall(shap_values[16])
+    shap.plots.waterfall(shap_values[ligne_numero])
 
     # Sauvegarder l'image dans un buffer
     buf = io.BytesIO()
