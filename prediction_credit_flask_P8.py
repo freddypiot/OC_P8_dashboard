@@ -112,7 +112,7 @@ def shap_feat_imp_locale():
     if input_df.empty:
         return jsonify({"error": "Client inconnu"}), 404
 
-    plt.figure()
+    plt.figure(figsize=(30, 8))
     shap.plots.waterfall(shap_values[ligne_numero])
 
     # Sauvegarder l'image dans un buffer
