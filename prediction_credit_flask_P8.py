@@ -1,23 +1,39 @@
 
+# programme python permettant d'afficher les prédictions de refus de crédit et les graphiques SHAP
+
 import pandas as pd
 import joblib
 import re
 import json
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
+import shap
+import matplotlib.pyplot as plt
+import io
 
 # Charger les données
 df_read = pd.read_csv('export_base_credit_1000.csv', sep="!")
 df_moyennes = pd.read_csv('base_credit_moyennes.csv', sep="!")
 df_read = df_read.rename(columns=lambda x: re.sub('[^A-Za-z0-9_]+', '', x))
-df_read = df_read.drop('TARGET', axis=1)
 seuil = 0.1  # Seuil de classification
 
 # Charger le modèle
 model = joblib.load("saved_model.pkl")
+X = df_read.drop('TARGET', axis=1)
+y = df_read['TARGET']
+df_read = df_read.drop('TARGET', axis=1)
 
-print("Test print")
+# Fonction pour afficher les graphiques SHAP
+explainer = shap.Explainer(model, X)
+shap_values = explainer(X, check_additivity=False)
 
 app = Flask(__name__)
+
+@app.route('/test', methods=['POST'])
+def test():
+    result = {
+        "id_client": 1000
+    }
+    return jsonify(result)
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -67,5 +83,32 @@ def predict():
     }
     return jsonify(result)
 
+
+@app.route('/shap_feat_imp_globale', methods=['POST'])
+def shap_feat_imp_globale():
+    # Générer le plot SHAP
+    plt.figure()
+    shap.summary_plot(shap_values, X)
+
+    # Sauvegarder l'image dans un buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+
+    #return send_file(buf, mimetype='image/png', as_attachment=True, attachment_filename='shap_summary.png')
+    return send_file(buf, mimetype='image/png')
+
+@app.route('/shap_feat_imp_locale', methods=['POST'])
+def shap_feat_imp_locale():
+    plt.figure()
+    shap.plots.waterfall(shap_values[16])
+
+    # Sauvegarder l'image dans un buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+
+    return send_file(buf, mimetype='image/png')
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=7000)
