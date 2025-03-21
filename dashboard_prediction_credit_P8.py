@@ -26,6 +26,9 @@ st.title("Prédiction de Crédit")
 
 # Entrée utilisateur pour l'ID client
 id_client = st.number_input("Entrez l'ID client", min_value=0, step=1, value=100002)
+simu_retard = st.number_input("Simulation : Retard de paiement", min_value=0, max_value=80, step=5, value=None, placeholder="Entrez le retard de paiement à simuler entre 0 et 80 jours")
+simu_annuite = st.number_input("Simulation : montant de l'annuité", min_value=0, max_value=100000, step=5000, value=None, placeholder="Entrez l'annuité à simuler entre 0 et 100 K€")
+simu_anciennete = st.number_input("Simulation : ancienneté emploi (années)", min_value=0, max_value=40,step=1, value=None, placeholder="Entrez l'ancienneté à simuler entre 0 et 40 ans")
 
 # Bouton pour soumettre l'ID client
 if st.button("Prédire"):
@@ -33,7 +36,12 @@ if st.button("Prédire"):
     url_predict = "https://oc-p8-dashboard-freddy-piot.onrender.com/predict"
     url_shap_globale = "https://oc-p8-dashboard-freddy-piot.onrender.com/shap_feat_imp_globale"
     url_shap_locale = "https://oc-p8-dashboard-freddy-piot.onrender.com/shap_feat_imp_locale"
-    payload = {"id_client": id_client}
+    payload = {
+        "id_client": id_client,
+        "simu_retard": simu_retard,
+        "simu_annuite": simu_annuite,
+        "simu_anciennete": simu_anciennete
+        }
     headers = {"content-type": "application/json"}
 
     # Appel à l'API
@@ -74,7 +82,10 @@ if st.button("Prédire"):
             "Age": str(result['age']) + ' (moyenne : ' + str(result['age_moyen']) + ')',
             "Revenu annuel": str(result['revenu_annuel']) + ' (moyenne : ' + str(result['revenu_annuel_moyen']) + ')',
             "Montant du crédit": str(result['montant_credit']) + ' (moyenne : ' + str(result['montant_credit_moyen']) + ')',
-            "Durée du crédit": str(result['duree_credit']) + ' (moyenne : ' + str(result['duree_credit_moyen']) + ')'
+            "Durée du crédit": str(result['duree_credit']) + ' (moyenne : ' + str(result['duree_credit_moyen']) + ')',
+            "Retard de paiement": str(result['retard']),
+            "Annuité": str(result['annuite']),
+            "Ancienneté": str(int(-result['anciennete'] / 365.25))
         }
 
         st.write("### Informations Descriptives du Client")
@@ -140,7 +151,7 @@ st.sidebar.write("**EXT_SOURCE_3** - Score externe 3")
 st.sidebar.write("**PAYMENT_RATE** - Taux de paiement (mensualité / total)")
 st.sidebar.write("**CODE_GENDER** - Genre du client")
 st.sidebar.write("**INSTAL_DPD_MEAN** - Retard de paiement (jours)")
-st.sidebar.write("**AMT_ANNUITY** - Montant de la mensualité")
+st.sidebar.write("**AMT_ANNUITY** - Montant des annuités")
 st.sidebar.write("**APPROVED_CNT_PAYMENT_MEAN** - Moyenne des paiements approuvés")
 st.sidebar.write("**DAYS_EMPLOYED** - Ancienneté emploi (jours)")
 st.sidebar.write("**AMT_GOODS_PRICE** - Prix des biens")
