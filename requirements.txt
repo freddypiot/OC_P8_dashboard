@@ -9,3 +9,4 @@ requests==2.32.3
 matplotlib==3.10.1
 seaborn==0.13.2
 shap
+plotly
