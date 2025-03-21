@@ -4,6 +4,9 @@ import requests
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import altair as alt
+import plotly.express as px
+import plotly.graph_objects as go
 
 df_read = pd.read_csv('export_base_credit_1000.csv', sep="!")
 df_moyennes = pd.read_csv('base_credit_moyennes.csv', sep="!")
@@ -99,7 +102,24 @@ if st.button("Prédire"):
         if not client_data.empty:
             ax.scatter(client_data[st.session_state['variable_x']], client_data[st.session_state['variable_y']], color='red', s=100, label='ID Client')
             ax.legend()
-        st.pyplot(fig)      
+        st.pyplot(fig)
+
+        st.write("### Croisement de l'annuité et de l'ancienneté ")
+
+        # Création d'un second graphique interactif
+        fig = px.scatter(df_read, x='AMT_ANNUITY', y='DAYS_EMPLOYED')        
+        fig.add_trace(
+            go.Scatter(
+                x=client_data['AMT_ANNUITY'],
+                y=client_data['DAYS_EMPLOYED'],
+                mode='markers',
+                marker=dict(color='red', size=10),
+                name='ID Client'
+            )
+        )
+
+        # Afficher le graphique dans Streamlit
+        st.plotly_chart(fig)
 
         # Affichage des graphiques SHAP
         st.write("### Graphiques SHAP")
@@ -160,5 +180,3 @@ st.sidebar.write("**NAME_EDUCATION_TYPE_Highereducation** - Enseignement supéri
 st.sidebar.write("**BURO_AMT_CREDIT_SUM_DEBT_MEAN** - Moyenne des dettes de crédit externes")
 st.sidebar.write("**NAME_FAMILY_STATUS_Married** - Statut familial - Marié")
 st.sidebar.write("**PREV_CNT_PAYMENT_MEAN** - Moyenne des paiements précédents")
-
-
