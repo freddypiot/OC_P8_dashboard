@@ -39,11 +39,33 @@ def test():
 def predict():
     data = request.get_json()
     id_client = data.get('id_client')
+    simu_retard = data.get('simu_retard')
+    simu_annuite = data.get('simu_annuite')
+    simu_anciennete = data.get('simu_anciennete')
+
 
     if id_client is None:
         return jsonify({"error": "ID client manquant"}), 400
 
     input_df = df_read[df_read['SK_ID_CURR'] == id_client]
+
+    # Données descriptives du client (avant éventuelle modification)
+    age = int(input_df['DAYS_BIRTH'] / -365)
+    revenu_annuel = int(input_df['AMT_INCOME_TOTAL'])
+    montant_mensualite = int(input_df['AMT_ANNUITY'])
+    montant_credit = int(input_df['AMT_CREDIT'])
+    duree_credit = int(input_df['AMT_CREDIT'] / input_df['AMT_ANNUITY'])
+    retard = int(input_df['INSTAL_DPD_MEAN'])
+    annuite = int(input_df['AMT_ANNUITY'])
+    anciennete = int(input_df['DAYS_EMPLOYED'])
+
+# Mise en place des simulations à la demande
+    if simu_retard != None:
+        input_df['INSTAL_DPD_MEAN'] = simu_retard
+    if simu_annuite != None:
+        input_df['AMT_ANNUITY'] = simu_annuite
+    if simu_anciennete != None:
+        input_df['DAYS_EMPLOYED'] = -(simu_anciennete * 365) # transformation des années en jours négatifs
 
     if input_df.empty:
         return jsonify({"error": "Client inconnu"}), 404
@@ -52,12 +74,7 @@ def predict():
     probabilite = probabilities[0][1]
     prediction = int(probabilite >= seuil)
 
-    # Données descriptive du client
-    age = int(input_df['DAYS_BIRTH'] / -365)
-    revenu_annuel = int(input_df['AMT_INCOME_TOTAL'])
-    montant_mensualite = int(input_df['AMT_ANNUITY'])
-    montant_credit = int(input_df['AMT_CREDIT'])
-    duree_credit = int(input_df['AMT_CREDIT'] / input_df['AMT_ANNUITY'])
+
 
     # Données moyennes tous clients confondus
     age_moyen = int(df_moyennes[df_moyennes['FEATURE'] == 'DAYS_BIRTH']['MOYENNE'].values[0] / -365)
@@ -70,6 +87,7 @@ def predict():
         "id_client": id_client,
         "refus_credit": prediction,
         "probabilite": round(probabilite, 4),
+        "simu_retard": simu_retard,
         "age": age,
         "revenu_annuel": revenu_annuel,
         "montant_mensualite": montant_mensualite,
@@ -79,7 +97,10 @@ def predict():
         "revenu_annuel_moyen": revenu_annuel_moyen,
         "montant_mensualite_moyen": montant_mensualite_moyen,
         "montant_credit_moyen": montant_credit_moyen,
-        "duree_credit_moyen": duree_credit_moyen
+        "duree_credit_moyen": duree_credit_moyen,
+        "retard": retard,
+        "annuite": annuite,
+        "anciennete": anciennete
     }
     return jsonify(result)
 
