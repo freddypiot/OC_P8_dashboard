@@ -100,7 +100,7 @@ if st.button("Prédire"):
         sns.scatterplot(data=df_read, x=st.session_state['variable_x'], y=st.session_state['variable_y'], ax=ax)
         client_data = df_read[df_read['SK_ID_CURR'] == id_client]
         if not client_data.empty:
-            ax.scatter(client_data[st.session_state['variable_x']], client_data[st.session_state['variable_y']], color='red', s=100, label='ID Client')
+            ax.scatter(client_data[st.session_state['variable_x']], client_data[st.session_state['variable_y']], color='red', marker='x', s=100, label='ID Client')
             ax.legend()
         st.pyplot(fig)
 
@@ -110,12 +110,23 @@ if st.button("Prédire"):
         fig = px.scatter(df_read, x='AMT_ANNUITY', y='DAYS_EMPLOYED')        
         fig.add_trace(
             go.Scatter(
-                x=client_data['AMT_ANNUITY'],
-                y=client_data['DAYS_EMPLOYED'],
-                mode='markers',
-                marker=dict(color='red', size=10),
-                name='ID Client'
+            x=client_data['AMT_ANNUITY'],
+            y=client_data['DAYS_EMPLOYED'],
+            mode='markers',
+            marker=dict(color='red', size=10, symbol='x'),
+            name='ID Client'
             )
+        )
+
+        # Ajouter un texte de remplacement au graphique
+        fig.add_annotation(
+            x=client_data['AMT_ANNUITY'],
+            y=client_data['DAYS_EMPLOYED'],
+            text="ID Client",
+            showarrow=True,
+            arrowhead=1,
+            ax=0,
+            ay=-40
         )
 
         # Afficher le graphique dans Streamlit
